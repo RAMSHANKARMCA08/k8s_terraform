@@ -2,14 +2,47 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_key_pair" "deployer" {
-  key_name   = "k8s-key"
-  public_key = file(var.public_key_path)
+provider "aws" {
+  region = "us-east-1"
 }
 
+# VPC
+resource "aws_vpc" "main_vpc" {
+  cidr_block = "10.0.0.0/16"
+}
+
+# Internet Gateway
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main_vpc.id
+}
+
+# Public Subnet
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.main_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+}
+
+# Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+}
+
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# Security Group
 resource "aws_security_group" "k8s_sg" {
-  name        = "k8s-sg"
-  description = "Allow Kubernetes communication"
+  name        = "k8s_sg"
+  description = "Allow SSH and all traffic between nodes"
+  vpc_id      = aws_vpc.main_vpc.id
 
   ingress {
     from_port   = 22
@@ -19,17 +52,17 @@ resource "aws_security_group" "k8s_sg" {
   }
 
   ingress {
-    from_port   = 6443
-    to_port     = 6443
+    from_port   = 0
+    to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   ingress {
-    from_port   = 10250
-    to_port     = 10250
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "udp"
+    self        = true
   }
 
   egress {
@@ -40,6 +73,7 @@ resource "aws_security_group" "k8s_sg" {
   }
 }
 
+# Master Node
 resource "aws_instance" "k8s_master" {
   ami           = var.ami_id
   instance_type = var.master_instance_type
@@ -52,6 +86,7 @@ resource "aws_instance" "k8s_master" {
   user_data = file("scripts/master.sh")
 }
 
+# Worker Node
 resource "aws_instance" "k8s_workers" {
   count         = var.worker_count
   ami           = var.ami_id
