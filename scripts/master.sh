@@ -1,5 +1,4 @@
 #!/bin/bash
-ssh-keygen -t rsa -b 4096 -C "ramshankar.mca08@gmail.com"
 apt update && apt install -y docker.io apt-transport-https curl
 
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
@@ -14,3 +13,5 @@ cp /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
 
 kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+ssh-keygen -t rsa -b 2048 -f ~/.ssh
