@@ -78,6 +78,7 @@ resource "aws_instance" "k8s_master" {
   ami           = var.ami_id
   instance_type = var.master_instance_type
   key_name      = var.key_name
+  subnet_id     = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
   #security_groups = [aws_security_group.k8s_sg.name]
   tags = {
@@ -93,6 +94,7 @@ resource "aws_instance" "k8s_workers" {
   ami           = var.ami_id
   instance_type = var.worker_instance_type
   key_name      = var.key_name
+  subnet_id     = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
   #security_groups = [aws_security_group.k8s_sg.name]
   tags = {
