@@ -1,4 +1,4 @@
-ami_id              = "ami-0e35ddab05955cf57" # Ubuntu Server 24.04 LTS Asia Pacific Mumbai
+ami_id              = "ami-06b6e5225d1db5f46" # Ubuntu Server 22.04 LTS Asia Pacific Mumbai
 public_key_path     = "~/.ssh/id_rsa.pub"
 worker_count        = 1
 master_instance_type = "t2.medium"
