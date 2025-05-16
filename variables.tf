@@ -21,3 +21,7 @@ variable "worker_count" {
 variable "public_key_path" {
   description = "Path to your SSH public key"
 }
+
+variable "key_name" {
+  description = "EC2 Key pair name"
+}

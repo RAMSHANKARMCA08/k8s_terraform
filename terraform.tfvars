@@ -3,8 +3,4 @@ public_key_path     = "~/.ssh/id_rsa.pub"
 worker_count        = 2
 master_instance_type = "t2.medium"
 worker_instance_type = "t2.micro"
-
-variable "key_name" {
-  description = "EC2 Key pair name"
-  type        = newaws
-}
+key_name = "awsnew"
