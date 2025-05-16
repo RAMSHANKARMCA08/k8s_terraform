@@ -69,12 +69,17 @@ resource "aws_security_group" "k8s_sg" {
   }
 }
 
+output "k8s_sg_id" {
+  value = aws_security_group.k8s_sg.id
+}
+
 # Master Node
 resource "aws_instance" "k8s_master" {
   ami           = var.ami_id
   instance_type = var.master_instance_type
   key_name      = var.key_name
-  security_groups = [aws_security_group.k8s_sg.name]
+  vpc_security_group_ids = [aws_security_group.k8s_sg.id]
+  #security_groups = [aws_security_group.k8s_sg.name]
   tags = {
     Name = "K8s-Master"
   }
@@ -88,7 +93,8 @@ resource "aws_instance" "k8s_workers" {
   ami           = var.ami_id
   instance_type = var.worker_instance_type
   key_name      = var.key_name
-  security_groups = [aws_security_group.k8s_sg.name]
+  vpc_security_group_ids = [aws_security_group.k8s_sg.id]
+  #security_groups = [aws_security_group.k8s_sg.name]
   tags = {
     Name = "K8s-Worker-${count.index}"
   }
