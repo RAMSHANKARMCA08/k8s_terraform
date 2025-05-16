@@ -1,10 +1,20 @@
 #!/bin/bash
 sudo apt update && apt install -y docker.io apt-transport-https curl
 
-sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+sudo mkdir -p /etc/apt/keyrings
+# Download the GPG key
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
+  | gpg --dearmor \
+  | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.gpg > /dev/null
 
-sudo apt update && apt install -y kubelet kubeadm kubectl
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" \
+  | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+
+sudo apt update
+sudo apt install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
 
 sudo kubeadm init --pod-network-cidr=192.168.0.0/16
 
@@ -12,6 +22,6 @@ sudo mkdir -p $HOME/.kube
 sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-sudo kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
 sudo ssh-keygen -t rsa -b 2048 -f ~/.ssh
