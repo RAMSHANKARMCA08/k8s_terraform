@@ -10,13 +10,10 @@ curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" \
   | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
-
 sudo apt update
-sudo apt install -y kubelet kubeadm kubectl
-sudo apt-mark hold kubelet kubeadm kubectl
-
-
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+sudo apt install -y kubelet kubeadm kubectl containerd
+sudo systemctl enable containerd
+sudo systemctl start containerd
 
 sudo mkdir -p $HOME/.kube
 sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
