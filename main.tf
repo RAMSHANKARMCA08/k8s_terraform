@@ -81,6 +81,8 @@ resource "aws_instance" "k8s_master" {
   subnet_id     = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
   #security_groups = [aws_security_group.k8s_sg.name]
+  
+  associate_public_ip_address = true
   tags = {
     Name = "K8s-Master"
   }
@@ -97,8 +99,10 @@ resource "aws_instance" "k8s_workers" {
   subnet_id     = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
   #security_groups = [aws_security_group.k8s_sg.name]
+  
+  associate_public_ip_address = true  
   tags = {
-    Name = "K8s-Worker-${count.index}"
+    Name = "k8s-worker-${count.index + 1}"
   }
 
   user_data = file("scripts/worker.sh")
