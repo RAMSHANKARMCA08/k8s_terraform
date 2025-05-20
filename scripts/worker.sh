@@ -1,18 +1,24 @@
 #!/bin/bash
-sudo apt update && apt install -y docker.io apt-transport-https curl
+set -e
 
-sudo mkdir -p /etc/apt/keyrings
-# Download the GPG key
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
-  | gpg --dearmor \
-  | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.gpg > /dev/null
+# Install dependencies
+apt-get update -y && apt-get install -y apt-transport-https curl containerd
 
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" \
-  | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# Configure containerd
+mkdir -p /etc/containerd
+containerd config default > /etc/containerd/config.toml
+systemctl restart containerd
+systemctl enable containerd
 
+# Install Kubernetes
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+apt-get update
+apt-get install -y kubelet kubeadm
+apt-mark hold kubelet kubeadm
 
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y kubelet kubeadm kubectl
-sudo apt-mark hold kubelet kubeadm kubectl
+# Disable swap
+swapoff -a
+sed -i '/ swap / s/^/#/' /etc/fstab
 
-sudo ssh-keygen -t rsa -b 2048 -f ~/.ssh
+# You will need to SSH into the worker and run the join command after deployment.

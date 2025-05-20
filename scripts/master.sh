@@ -1,24 +1,36 @@
 #!/bin/bash
-sudo apt update && apt install -y docker.io apt-transport-https curl
+set -e
 
-sudo mkdir -p /etc/apt/keyrings
-# Download the GPG key
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
-  | gpg --dearmor \
-  | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.gpg > /dev/null
+# Install dependencies
+apt-get update -y && apt-get install -y apt-transport-https curl containerd jq
 
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /" \
-  | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# Configure containerd
+mkdir -p /etc/containerd
+containerd config default > /etc/containerd/config.toml
+systemctl restart containerd
+systemctl enable containerd
 
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y kubelet kubeadm kubectl containerd
-sudo systemctl enable containerd
-sudo systemctl start containerd
+# Install Kubernetes
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+apt-get update
+apt-get install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl
 
-sudo mkdir -p $HOME/.kube
-sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+# Disable swap
+swapoff -a
+sed -i '/ swap / s/^/#/' /etc/fstab
 
-kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+# Init cluster
+kubeadm init --pod-network-cidr=10.244.0.0/16 > /root/kubeadm-init.log
 
-sudo ssh-keygen -t rsa -b 2048 -f ~/.ssh
+# Configure kubectl
+mkdir -p /root/.kube
+cp /etc/kubernetes/admin.conf /root/.kube/config
+
+# Install Flannel
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+# Get join command
+kubeadm token create --print-join-command > /join.sh
+chmod +x /join.sh

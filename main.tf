@@ -48,17 +48,17 @@ resource "aws_security_group" "k8s_sg" {
   }
 
   ingress {
-    from_port   = 0
-    to_port     = 65535
+    from_port   = 6443
+    to_port     = 6443
     protocol    = "tcp"
-    self        = true
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "udp"
-    self        = true
+    from_port   = 30000
+    to_port     = 32767
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
