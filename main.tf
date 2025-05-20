@@ -48,15 +48,23 @@ resource "aws_security_group" "k8s_sg" {
   }
 
   ingress {
-    from_port   = 6443
-    to_port     = 6443
+    from_port   = 0
+    to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    self        = true
   }
 
   ingress {
-    from_port   = 30000
-    to_port     = 32767
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "udp"
+    self        = true
+  }
+  
+  # Allow Port 8080 (e.g., for Argo CD, custom app)
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
